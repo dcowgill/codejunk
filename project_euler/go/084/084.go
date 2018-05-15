@@ -110,10 +110,19 @@ func newDeck(cards ...Card) *Deck {
 }
 
 // Parameters to the simulation.
-type SimulationParams struct {
-	NumTurns int
-	NumDice  int
-	DieSize  int
+type simulationParams struct {
+	numTurns int
+	numDice  int
+	dieSize  int
+}
+
+// NumTurns reports the number of simulation turns. Uses a suitable default if
+// p.numTurns is not a positive value.
+func (p simulationParams) NumTurns() int {
+	if p.numTurns <= 0 {
+		return 1000000
+	}
+	return p.numTurns
 }
 
 // Rolls an n-sided die and reports the result.
@@ -121,12 +130,12 @@ func die(n int) int { return rand.Intn(n) + 1 }
 
 // Rolls the dice and returns their sum. The second value will be true
 // if and only if all the dice came up the same.
-func (p SimulationParams) roll() (int, bool) {
-	first := die(p.DieSize)
+func (p simulationParams) roll() (int, bool) {
+	first := die(p.dieSize)
 	sum := first
 	same := true
-	for i := 1; i < p.NumDice; i++ {
-		r := die(p.DieSize)
+	for i := 1; i < p.numDice; i++ {
+		r := die(p.dieSize)
 		same = same && r == first
 		sum += r
 	}
@@ -145,7 +154,7 @@ func (a ByCount) Less(i, j int) bool { return a[i].Count < a[j].Count }
 
 // simulate runs the Monopoly game simulation and returns the frequency
 // counts the spaces on which each turn ended, ordered by space.
-func simulate(params SimulationParams) []SpaceCount {
+func simulate(params simulationParams) []SpaceCount {
 	var visit func(int) int
 
 	// Create the Chance deck.
@@ -190,7 +199,7 @@ func simulate(params SimulationParams) []SpaceCount {
 
 	// Run the simulation.
 	doubles := 0
-	for i := 0; i < params.NumTurns; i++ {
+	for i := 0; i < params.NumTurns(); i++ {
 		sum, same := params.roll()
 		if same {
 			doubles++
@@ -221,20 +230,9 @@ func normalize(freq []SpaceCount) []float64 {
 	return a
 }
 
-func solve() string {
-	const (
-		numTurns = 10000
-		numDice  = 2
-		dieSize  = 4
-		topN     = 3
-	)
-
+func solve(params simulationParams, topN int) string {
 	// Run the simulation.
-	freq := simulate(SimulationParams{
-		NumTurns: numTurns,
-		NumDice:  numDice,
-		DieSize:  dieSize,
-	})
+	freq := simulate(params)
 
 	// Sort by frequency.
 	sort.Sort(sort.Reverse(ByCount(freq)))
