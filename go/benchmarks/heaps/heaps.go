@@ -3,8 +3,6 @@ package heaps
 import (
 	"container/heap"
 	"time"
-
-	"gopkg.in/mgo.v2/bson"
 )
 
 type timeHeap []time.Time
@@ -29,7 +27,7 @@ func (h *timeHeap) Pop() interface{} {
 }
 
 type worker1 struct {
-	id bson.ObjectId
+	id string
 	t  time.Time
 }
 

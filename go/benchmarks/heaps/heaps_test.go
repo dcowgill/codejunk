@@ -3,10 +3,9 @@ package heaps
 import (
 	"container/heap"
 	"math/rand"
+	"strconv"
 	"testing"
 	"time"
-
-	"gopkg.in/mgo.v2/bson"
 )
 
 const (
@@ -53,7 +52,7 @@ func BenchmarkWorker1Heap(b *testing.B) {
 	var a []worker1
 	now := time.Now()
 	for i := 0; i < N; i++ {
-		a = append(a, worker1{bson.NewObjectId(), now.Add(time.Duration(i) * time.Minute)})
+		a = append(a, worker1{strconv.Itoa(i), now.Add(time.Duration(i) * time.Minute)})
 	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
