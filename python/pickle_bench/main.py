@@ -1,8 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from __future__ import division, print_function
 
-import cPickle
+import _pickle as cPickle
 import collections
 import dill
 import json
@@ -46,7 +46,7 @@ def random_number():
 
 
 def random_string():
-    return ''.join(random.choice(string.printable) for _ in xrange(random.randint(5, 20)))
+    return ''.join(random.choice(string.printable) for _ in range(random.randint(5, 20)))
 
 
 def random_value():
@@ -54,32 +54,32 @@ def random_value():
 
 
 def random_a():
-    return A(**{"field" + str(i): random_value() for i in xrange(10)})
+    return A(**{"field" + str(i): random_value() for i in range(10)})
 
 
 def random_b():
-    return B(**{"a" + str(i): random_a() for i in xrange(3)})
+    return B(**{"a" + str(i): random_a() for i in range(3)})
 
 
 def random_c():
-    return C(**{"b" + str(i): random_b() for i in xrange(2)})
+    return C(**{"b" + str(i): random_b() for i in range(2)})
 
 
 def assert_As_are_equal(a1, a2):
     assert isinstance(a1, A) and isinstance(a2, A)
-    for k, v in a1.__dict__.iteritems():
+    for k, v in a1.__dict__.items():
         assert v == getattr(a2, k), "%r == %r" % (k, getattr(a2, k))
 
 
 def assert_Bs_are_equal(b1, b2):
     assert isinstance(b1, B) and isinstance(b2, B)
-    for k, v in b1.__dict__.iteritems():
+    for k, v in b1.__dict__.items():
         assert_As_are_equal(v, getattr(b2, k))
 
 
 def assert_Cs_are_equal(c1, c2):
     assert isinstance(c1, C) and isinstance(c2, C)
-    for k, v in c1.__dict__.iteritems():
+    for k, v in c1.__dict__.items():
         assert_Bs_are_equal(v, getattr(c2, k))
 
 
@@ -107,54 +107,54 @@ def main():
     assert_Cs_are_equal(c, c_from_dict(ujson.loads(ujson.dumps(c))))
 
     def pickle_dumps(c, n):
-        for _ in xrange(n):
+        for _ in range(n):
             pickle.dumps(c, protocol=-1)
 
     def pickle_loads(c, n):
         s = pickle.dumps(c, protocol=-1)
-        for _ in xrange(n):
+        for _ in range(n):
             pickle.loads(s)
 
     def cpickle_dumps(c, n):
-        for _ in xrange(n):
+        for _ in range(n):
             cPickle.dumps(c, protocol=-1)
 
     def cpickle_loads(c, n):
         s = cPickle.dumps(c, protocol=-1)
-        for _ in xrange(n):
+        for _ in range(n):
             cPickle.loads(s)
 
     def dill_dumps(c, n):
-        for _ in xrange(n):
+        for _ in range(n):
             dill.dumps(c, protocol=-1)
 
     def dill_loads(c, n):
         s = dill.dumps(c, protocol=-1)
-        for _ in xrange(n):
+        for _ in range(n):
             dill.loads(s)
 
     def ujson_dumps(c, n):
-        for _ in xrange(n):
+        for _ in range(n):
             ujson.dumps(c)
 
     def ujson_loads(c, n):
         s = ujson.dumps(c)
-        for _ in xrange(n):
+        for _ in range(n):
             ujson.loads(s)
 
     def ujson_loads_and_create(c, n):
         s = ujson.dumps(c)
-        for _ in xrange(n):
+        for _ in range(n):
             c_from_dict(ujson.loads(s))
 
     def json_loads(c, n):
         s = ujson.dumps(c)
-        for _ in xrange(n):
+        for _ in range(n):
             json.loads(s)
 
     def json_loads_and_create(c, n):
         s = ujson.dumps(c)
-        for _ in xrange(n):
+        for _ in range(n):
             c_from_dict(json.loads(s))
 
     trials = [
