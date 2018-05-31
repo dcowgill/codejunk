@@ -89,7 +89,7 @@ func main() {
 	must(err)
 	for i := 0; i < numCounters; i++ {
 		name := nthCounterName(i)
-		_, err := conn.Exec("insert into consec_seq (name, last) values ($1, 0)", name)
+		_, err := conn.Exec("insert into gapless_sequence (name, last) values ($1, 0)", name)
 		if err, ok := err.(pgx.PgError); ok && err.Code == "23505" {
 			continue // Expected and ok.
 		}
@@ -121,10 +121,10 @@ func nthCounterName(n int) string { return fmt.Sprintf("C%02d", n) }
 // How frequently workers will report progress.
 const logProgressInterval = 5 * time.Second
 
-// Loops forever, inserting into consec_thing as quickly as possible.
+// Loops forever, inserting into my_thing as quickly as possible.
 func worker(name string, workerID int, c *pgx.Conn) {
 	const insertSQL = `
-insert into consec_thing (seq_name, junk1, junk2, junk3, junk4)
+insert into my_thing (seq_name, junk1, junk2, junk3, junk4)
 values ($1, $2, $3, $4, $5)
 `
 	t := time.Now()
