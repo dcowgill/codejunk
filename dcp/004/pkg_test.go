@@ -27,7 +27,8 @@ func TestAll(t *testing.T) {
 	for _, fn := range funcs {
 		for _, tt := range tests {
 			t.Run(fmt.Sprintf("%s(%+v)", fn.name, tt.a), func(t *testing.T) {
-				n := fn.f(tt.a)
+				a := append(tt.a[:0:0], tt.a...) // make a copy
+				n := fn.f(a)
 				if n != tt.n {
 					t.Fatalf("got %d, want %d", n, tt.n)
 				}

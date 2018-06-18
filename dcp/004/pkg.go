@@ -65,8 +65,7 @@ func linear(a []int) int {
 		j := x - 1 // target slot for a[i]
 		if a[j] == x {
 			// The target is already set to its correct value, which
-			// means a[i] is a duplicate. Set to zero to ignore.
-			a[i] = 0
+			// means a[i] is a duplicate.
 			continue
 		}
 		a[j], a[i] = a[i], a[j]
