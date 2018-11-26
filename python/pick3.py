@@ -5,7 +5,7 @@ import sys
 
 def pick3(num_games):
     games = sorted(shuffled(range(1, num_games+1))[:3])
-    return [(n, random.choice(['Home', 'Away'])) for n in games]
+    return [(n, random.choice(['home', 'away'])) for n in games]
 
 def shuffled(seq):
     seq = list(seq)
@@ -13,8 +13,12 @@ def shuffled(seq):
     return seq
 
 def main():
-    num_games = int(sys.argv[1]) if len(sys.argv) == 2 else 14
-    print(pick3(num_games))
+    try:
+        num_games = int(sys.argv[1])
+    except (IndexError, ValueError):
+        sys.exit("usage: pick3.py num_games")
+    for p in pick3(num_games):
+        print("%2d %s" % p)
 
 if __name__ == '__main__':
     main()

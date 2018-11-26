@@ -55,7 +55,7 @@ func (g *graph) numEdges() int {
 	return n
 }
 
-func kahnsAlgo(g *graph) []vertex {
+func topSortKahn(g *graph) []vertex {
 	var S []vertex
 	for src := range g.edges {
 		if !g.hasIncomingEdge(src) {
@@ -64,9 +64,10 @@ func kahnsAlgo(g *graph) []vertex {
 	}
 	var L []vertex
 	for len(S) != 0 {
-		sort.Slice(S, func(i, j int) bool { return S[i] < S[j] }) // ensure consistent output
-		node := S[0]
-		S = S[1:]
+		sort.Slice(S, func(i, j int) bool { return S[i] > S[j] }) // ensure consistent output
+		last := len(S) - 1
+		node := S[last]
+		S = S[:last]
 		L = append(L, node)
 		for m := range g.edges[node] {
 			g.removeEdge(node, m)
@@ -101,6 +102,6 @@ func main() {
 		{"X", "E", "F"},
 	})
 	fmt.Printf("graph = %+v\n", graph)
-	L := kahnsAlgo(graph)
+	L := topSortKahn(graph)
 	fmt.Printf("L = %q\n", L)
 }
