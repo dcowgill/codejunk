@@ -1,200 +1,234 @@
 package intset64
 
-import "sort"
+//
+// bitSet
+//
 
-type Range struct{ low, high, step int }
-
-// Uses a bitset.
-func applyBitSet(rs []Range, low, high int) []int {
-	var set intSet
-	for _, r := range rs {
-		l, h := low, high
-		if r.low > l {
-			l = r.low
-		}
-		if r.high < h {
-			h = r.high
-		}
-		for i := l; i <= h; i += r.step {
-			set.add(i)
-		}
-	}
-	a := make([]int, 0, set.count())
-	for i := 0; i < 64; i++ {
-		if set.contains(i) {
-			a = append(a, i)
-		}
-	}
-	return a
+type bitSet uint64
+type bitSetIter struct {
+	set bitSet
+	cur int
+	end int
 }
 
-// Uses an O(N) set.
-func applyLinearSet(rs []Range, low, high int) []int {
-	set := make(linearIntSet, 0)
-	for _, r := range rs {
-		l, h := low, high
-		if r.low > l {
-			l = r.low
-		}
-		if r.high < h {
-			h = r.high
-		}
-		for i := l; i <= h; i += r.step {
-			set.add(i)
-		}
+func (set *bitSet) addptr(x int)           { *set |= (1 << uint64(x)) }
+func (set *bitSet) removeptr(x int)        { *set &= ^(1 << uint64(x)) }
+func (set bitSet) add(x int) bitSet        { return set | (1 << uint64(x)) }
+func (set bitSet) remove(x int) bitSet     { return set & ^(1 << uint64(x)) }
+func (set bitSet) contains(x int) bool     { return set&(1<<uint64(x)) != 0 }
+func (set bitSet) empty() bool             { return set == 0 }
+func (set bitSet) countIsExactlyOne() bool { return set != 0 && (set&(set-1)) == 0 }
+func (set bitSet) count() int {
+	x := 0
+	for set != 0 {
+		set &= set - 1
+		x++
 	}
-	a := make([]int, 0, set.count())
-	for i := low; i <= high; i++ {
-		if set.contains(i) {
-			a = append(a, i)
+	return x
+}
+func (set bitSet) iter(high int) bitSetIter {
+	return bitSetIter{set: set, end: high + 1}
+}
+func (it *bitSetIter) next() int {
+	for it.cur < it.end {
+		if it.set.contains(it.cur) {
+			x := it.cur
+			it.cur++
+			return x
 		}
+		it.cur++
 	}
-	return a
+	return -1
 }
 
-// Uses a sorted O(N) set.
-func applySortedSet(rs []Range, low, high int) []int {
-	set := make(sortedIntSet, 0)
-	for _, r := range rs {
-		l, h := low, high
-		if r.low > l {
-			l = r.low
-		}
-		if r.high < h {
-			h = r.high
-		}
-		for i := l; i <= h; i += r.step {
-			set.add(i)
-		}
-	}
-	a := make([]int, 0, set.count())
-	for i := low; i <= high; i++ {
-		if set.contains(i) {
-			a = append(a, i)
-		}
-	}
-	return a
-}
-
-// Uses sorting.
-func applySortUnique(rs []Range, low, high int) []int {
-	a := []int{}
-	for _, r := range rs {
-		l, h := low, high
-		if r.low > l {
-			l = r.low
-		}
-		if r.high < h {
-			h = r.high
-		}
-		for i := l; i <= h; i += r.step {
-			a = append(a, i)
-		}
-	}
-	if len(a) == 0 {
-		return a
-	}
-	sort.Ints(a)
-	var b []int
-	prev := a[0]
-	b = append(b, prev)
-	for i := 1; i < len(a); i++ {
-		if a[i] != prev {
-			prev = a[i]
-			b = append(b, prev)
-		}
-	}
-	return b
-}
-
-type empty struct{}
-
-// Uses a map.
-func applyMap(rs []Range, low, high int) []int {
-	set := make(map[int]empty)
-	for _, r := range rs {
-		l, h := low, high
-		if r.low > l {
-			l = r.low
-		}
-		if r.high < h {
-			h = r.high
-		}
-		for i := l; i <= h; i += r.step {
-			set[i] = empty{}
-		}
-	}
-	if len(set) == 0 {
-		return []int{}
-	}
-	a := make([]int, 0, len(set))
-	for k := range set {
-		a = append(a, k)
-	}
-	sort.Ints(a)
-	return a
-}
-
-// Integer set that only supports elements in the range [0, 63].
-type intSet int64
-
-func (x *intSet) add(n int)           { *x |= (1 << uint(n)) }
-func (x *intSet) contains(n int) bool { return *x&(1<<uint(n)) != 0 }
-func (x *intSet) count() int {
-	n := 0
-	y := *x
-	for y != 0 {
-		y &= (y - 1)
-		n++
-	}
-	return n
-
-}
+//
+// linearIntSet
+//
 
 type linearIntSet []int
-
-func (x *linearIntSet) add(n int) {
-	if !x.contains(n) {
-		*x = append(*x, n)
-	}
+type linearIntSetIter struct {
+	set linearIntSet
+	pos int
 }
-func (x *linearIntSet) contains(n int) bool {
-	for _, m := range *x {
-		if n == m {
+
+func newLinearIntSet() linearIntSet { return make(linearIntSet, 0) }
+func (set linearIntSet) add(x int) linearIntSet {
+	for _, y := range set {
+		if x == y {
+			return set
+		}
+	}
+	return append(set, x)
+}
+func (set linearIntSet) remove(x int) linearIntSet {
+	for i, y := range set {
+		if x == y {
+			n := len(set)
+			set[i], set[n-1] = set[n-1], set[i]
+			return set[:n-1]
+		}
+	}
+	return set
+}
+func (set linearIntSet) contains(x int) bool {
+	for _, y := range set {
+		if x == y {
 			return true
 		}
 	}
 	return false
 }
-func (x *linearIntSet) count() int { return len(*x) }
+func (set linearIntSet) count() int             { return len(set) }
+func (set linearIntSet) iter() linearIntSetIter { return linearIntSetIter{set, 0} }
+func (it *linearIntSetIter) next() int {
+	if it.pos >= len(it.set) {
+		return -1
+	}
+	x := it.set[it.pos]
+	it.pos++
+	return x
+}
+
+//
+// sortedIntSet
+//
 
 type sortedIntSet []int
 
-func (x *sortedIntSet) add(n int) {
+func newSortedIntSet() sortedIntSet { return make(sortedIntSet, 0) }
+func (set sortedIntSet) add(x int) sortedIntSet {
 	i := 0
-	for i < len(*x) && n >= (*x)[i] {
-		if n == (*x)[i] {
-			return
+	for i < len(set) && x >= set[i] {
+		if x == set[i] {
+			return set
 		}
 		i++
 	}
-	*x = append(*x, 0)
-	for k := len(*x) - 1; k > i; k-- {
-		(*x)[k] = (*x)[k-1]
+	set = append(set, 0)
+	for k := len(set) - 1; k > i; k-- {
+		set[k] = set[k-1]
 	}
-	(*x)[i] = n
+	set[i] = x
+	return set
 }
-func (x *sortedIntSet) contains(n int) bool {
-	for _, m := range *x {
-		if n == m {
+func (set sortedIntSet) remove(x int) sortedIntSet {
+	for i, y := range set {
+		if x == y {
+			n := len(set)
+			for j := i + 1; j < n; j++ {
+				set[j-1] = set[j]
+			}
+			return set[:n-1]
+		}
+		if x < y {
+			break
+		}
+	}
+	return set
+}
+func (set sortedIntSet) contains(x int) bool {
+	for _, y := range set {
+		if x == y {
 			return true
 		}
-		if n < m {
+		if x < y {
 			break
 		}
 	}
 	return false
 }
-func (x *sortedIntSet) count() int {
-	return len(*x)
+func (set sortedIntSet) count() int { return len(set) }
+
+//
+// mapIntSet
+//
+
+type empty struct{}
+
+type mapIntSet map[int]empty
+
+func newMapIntSet() mapIntSet             { return make(mapIntSet) }
+func (set mapIntSet) add(x int)           { set[x] = empty{} }
+func (set mapIntSet) remove(x int)        { delete(set, x) }
+func (set mapIntSet) contains(x int) bool { _, ok := set[x]; return ok }
+func (set mapIntSet) count() int          { return len(set) }
+
+//====================
+// test functions
+//====================
+
+func addRangeBitSet(low, high, step int) int {
+	var set bitSet
+	for i := low; i <= high; i += step {
+		set = set.add(i)
+	}
+	return set.count()
+}
+
+func addRangeLinearSet(low, high, step int) int {
+	set := newLinearIntSet()
+	for i := low; i <= high; i += step {
+		set = set.add(i)
+	}
+	return set.count()
+}
+
+func addRangeSortedSet(low, high, step int) int {
+	set := newSortedIntSet()
+	for i := low; i <= high; i += step {
+		set = set.add(i)
+	}
+	return set.count()
+}
+
+func addRangeMapSet(low, high, step int) int {
+	set := newMapIntSet()
+	for i := low; i <= high; i += step {
+		set.add(i)
+	}
+	return set.count()
+}
+
+func addAndRemoveRangeBitSet(add, remove []int) int {
+	var set bitSet
+	for _, x := range add {
+		set = set.add(x)
+	}
+	for _, x := range remove {
+		set = set.remove(x)
+	}
+	return set.count()
+}
+
+func addAndRemoveRangeLinearSet(add, remove []int) int {
+	set := newLinearIntSet()
+	for _, x := range add {
+		set = set.add(x)
+	}
+	for _, x := range remove {
+		set = set.remove(x)
+	}
+	return set.count()
+}
+
+func addAndRemoveRangeSortedSet(add, remove []int) int {
+	set := newSortedIntSet()
+	for _, x := range add {
+		set = set.add(x)
+	}
+	for _, x := range remove {
+		set = set.remove(x)
+	}
+	return set.count()
+}
+
+func addAndRemoveRangeMapSet(add, remove []int) int {
+	set := newMapIntSet()
+	for _, x := range add {
+		set.add(x)
+	}
+	for _, x := range remove {
+		set.remove(x)
+	}
+	return set.count()
 }

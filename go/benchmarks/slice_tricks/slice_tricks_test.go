@@ -22,15 +22,24 @@ func extendForLoop(a []*T, n int) []*T {
 	return a
 }
 
+func extendCopy(a []*T, n int) []*T {
+	if len(a) >= n {
+		return a
+	}
+	b := make([]*T, n)
+	copy(b, a)
+	return b
+}
+
 var b1conf = []struct {
 	a, b int
 }{
-	// {0, 0},
-	// {0, 1},
-	// {0, 2},
-	// {0, 10},
-	// {0, 100},
-	// {0, 1000},
+	{0, 0},
+	{0, 1},
+	{0, 2},
+	{0, 10},
+	{0, 100},
+	{0, 1000},
 	{100, 101},
 	{100, 102},
 	{100, 110},
@@ -46,15 +55,52 @@ func BenchmarkExtend(b *testing.B) {
 	b.ResetTimer()
 	for i, c := range b1conf {
 		a := aa[i]
-		b.Run(fmt.Sprintf("one line: %d to %d", c.a, c.b), func(b *testing.B) {
+		b.Run(fmt.Sprintf("%d to %d one line", c.a, c.b), func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				extendOneLine(a, c.b)
 			}
 		})
-		b.Run(fmt.Sprintf("for loop: %d to %d", c.a, c.b), func(b *testing.B) {
+		b.Run(fmt.Sprintf("%d to %d loop", c.a, c.b), func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				extendForLoop(a, c.b)
 			}
 		})
+		b.Run(fmt.Sprintf("%d to %d copy", c.a, c.b), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				extendCopy(a, c.b)
+			}
+		})
 	}
+}
+
+func BenchmarkRepeatedExtend(b *testing.B) {
+	const (
+		low  = 1
+		high = 500
+		step = 10
+	)
+	b.Run("one line", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			var a []*T
+			for i := low; i <= high; i += step {
+				a = extendOneLine(a, i)
+			}
+		}
+	})
+	b.Run("loop", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			var a []*T
+			for i := low; i <= high; i += step {
+				a = extendForLoop(a, i)
+			}
+		}
+	})
+	b.Run("copy", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			var a []*T
+			for i := low; i <= high; i += step {
+				a = extendCopy(a, i)
+			}
+		}
+	})
 }
