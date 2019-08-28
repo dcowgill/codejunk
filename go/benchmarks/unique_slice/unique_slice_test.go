@@ -58,7 +58,6 @@ func uniqMapStable(xs []string) []string {
 }
 
 func uniqList(xs []string) []string {
-	// var ys []string
 	ys := make([]string, 0, len(xs))
 outer:
 	for _, x := range xs {
@@ -70,6 +69,41 @@ outer:
 		ys = append(ys, x)
 	}
 	return ys
+}
+
+func uniqListWithEqFunc(xs []string, eq func(a, b string) bool) []string {
+	ys := make([]string, 0, len(xs))
+outer:
+	for _, x := range xs {
+		for _, y := range ys {
+			if eq(x, y) {
+				continue outer
+			}
+		}
+		ys = append(ys, x)
+	}
+	return ys
+}
+
+func uniqListWithEqFuncOp(xs []string) []string {
+	return uniqListWithEqFunc(xs, func(a, b string) bool { return a == b })
+}
+
+func uniqSort(xs []string) []string {
+	if len(xs) < 2 {
+		return xs
+	}
+	ys := make([]string, len(xs))
+	copy(ys, xs)
+	sort.Strings(ys)
+	j := 1
+	for i := 1; i < len(ys); i++ {
+		if ys[i] != ys[i-1] {
+			ys[j] = ys[i]
+			j++
+		}
+	}
+	return ys[:j]
 }
 
 func uniqSmart(xs []string) []string {
@@ -105,10 +139,11 @@ var (
 )
 
 func randString() string {
-	const n = 50
+	const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	const n = 24
 	s := make([]byte, n)
 	for i := 0; i < n; i++ {
-		s[i] = byte(rand.Intn(128)) // ASCII
+		s[i] = chars[rand.Intn(len(chars))]
 	}
 	return string(s)
 }
@@ -148,24 +183,32 @@ func init() {
 	}
 
 	source := rand10[:5]
-	fill1 = repeatFill(source, 1)
-	fill10 = repeatFill(source, 10)
-	fill20 = repeatFill(source, 20)
-	fill50 = repeatFill(source, 50)
-	fill100 = repeatFill(source, 100)
-	fill1000 = repeatFill(source, 1000)
+	fill1 = shuffled(repeatFill(source, 1))
+	fill10 = shuffled(repeatFill(source, 10))
+	fill20 = shuffled(repeatFill(source, 20))
+	fill50 = shuffled(repeatFill(source, 50))
+	fill100 = shuffled(repeatFill(source, 100))
+	fill1000 = shuffled(repeatFill(source, 1000))
 }
 
+// Shuffles the slice in-place. Returns it as a convenience.
+func shuffled(a []string) []string {
+	rand.Shuffle(len(a), func(i, j int) { a[i], a[j] = a[j], a[i] })
+	return a
+}
+
+// Returns a n-length slice of n strings containing the strings in source,
+// repeated until the target length is reached.
 func repeatFill(source []string, n int) []string {
 	xs := make([]string, 0, n)
 	k := len(source)
 	for i := 0; i < n/k; i++ {
-		for _, s := range source {
-			xs = append(xs, s)
-		}
+		xs = append(xs, source...)
 	}
+	i := 0
 	for len(xs) < cap(xs) {
-		xs = append(xs, source[0])
+		xs = append(xs, source[i])
+		i = (i + 1) % len(source)
 	}
 	return xs
 }
@@ -178,11 +221,12 @@ func TestAll(t *testing.T) {
 		fn   func([]string) []string
 	}{
 		{"list", uniqList},
+		{"listFuncOp", uniqListWithEqFuncOp},
 		{"mapStable", uniqMapStable},
 		{"mapIndex", uniqMap},
 		{"smart", uniqSmart},
-		// {"extraSmart", uniqExtraSmart},
-		// {"squeeze", uniqSqueeze},
+		{"extraSmart", uniqExtraSmart},
+		// {"squeeze", uniqSqueeze}, // doesn't match; not stable
 	}
 	var cases = []struct {
 		name string
@@ -216,7 +260,13 @@ func TestAll(t *testing.T) {
 				correct := uniqList(xs)
 				result := fn.fn(xs)
 				if !reflect.DeepEqual(result, correct) {
-					t.Errorf("%s returns wrong result for test case %s", fn.name, cs.name)
+					if len(result) > 20 || len(correct) > 20 {
+						t.Errorf("%s returns wrong result for test case %s",
+							fn.name, cs.name)
+					} else {
+						t.Errorf("%s(%s) returned %+v, want %+v",
+							fn.name, cs.name, result, correct)
+					}
 				}
 			})
 		}
@@ -231,34 +281,36 @@ func BenchmarkUnique(b *testing.B) {
 		fn   func([]string) []string
 	}{
 		{"list", uniqList},
+		{"listFuncOp", uniqListWithEqFuncOp},
 		{"mapStable", uniqMapStable},
 		{"mapIndex", uniqMap},
-		// {"smart", uniqSmart},
-		// {"extraSmart", uniqExtraSmart},
-		// {"squeeze", uniqSqueeze},
+		{"sort", uniqSort},
+		{"smart", uniqSmart},
+		{"extraSmart", uniqExtraSmart},
+		{"squeeze", uniqSqueeze},
 	}
 	var cases = []struct {
 		name string
 		xs   []string
 	}{
-		// {"rand1", rand1},
-		// {"rand10", rand10},
-		// {"rand20", rand20},
-		// {"rand50", rand50},
-		// {"rand100", rand100},
-		// {"rand1000", rand1000},
-		// {"same1", same1},
-		// {"same10", same10},
-		// {"same20", same20},
-		// {"same50", same50},
-		// {"same100", same100},
-		// {"same1000", same1000},
-		// {"fill1", fill1},
-		// {"fill10", fill10},
+		{"rand1", rand1},
+		{"rand10", rand10},
+		{"rand20", rand20},
+		{"rand50", rand50},
+		{"rand100", rand100},
+		{"rand1000", rand1000},
+		{"same1", same1},
+		{"same10", same10},
+		{"same20", same20},
+		{"same50", same50},
+		{"same100", same100},
+		{"same1000", same1000},
+		{"fill1", fill1},
+		{"fill10", fill10},
 		{"fill20", fill20},
 		{"fill50", fill50},
 		{"fill100", fill100},
-		// {"fill1000", fill1000},
+		{"fill1000", fill1000},
 	}
 	for _, cs := range cases {
 		for _, fn := range funcs {
