@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width,initial-scale=1'>
+    <title>DOM benchmarks</title>
+    <link rel="stylesheet" href="./main.css">
+    <style type="text/css">
+      * {box-sizing: border-box; font-size: 14px;}
+      body {display: flex;}
+      pre {font-family: monospace;}
+      .left, .right {flex-grow: 1; flex-basis: 50%; padding: 20px;}
+      .left {border-right: 1px solid #ddd;}
+      #main-table {border: 1px solid black; border-collapse: collapse; table-layout: fixed;}
+      #main-table th, #main-table td {border: 1px solid #aaa; padding: 2px 8px;}
+      #main-table th.col0, #main-table td.col0 {width: 150px;}
+      #main-table th.col1, #main-table th.col1 {width: 100px;}
+      #main-table th.col2, #main-table th.col2 {width: 150px;}
+      #main-table th.col3, #main-table th.col3 {width: 100px;}
+      #main-table th.col4, #main-table th.col4 {width: 150px;}
+    </style>
+  </head>
+  <body>
+    <div class="left">
+      <button id="run">run benchmarks</button> (this will take a while)
+      <pre id="log"></pre>
+    </div>
+    <div class="right">
+      <table id="main-table">
+        <thead>
+          <th class="col0">col0</th>
+          <th class="col1">col1</th>
+          <th class="col2">col2</th>
+          <th class="col3">col3</th>
+          <th class="col4">col4</th>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <ul id="main-list"></ul>
+    </div>
+    <script src="./main.js"></script>
+  </body>
+</html>

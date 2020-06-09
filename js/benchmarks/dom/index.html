@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width,initial-scale=1'>
+    <title>big table DOM benchmark</title>
+    <link rel="stylesheet" href="./main.css">
+  </head>
+  <body>
+    state:
+    <ul>
+      <li>N = <input id="N" value="1000"></input></li>
+      <li>elapsed times: <span id="elapsed">n/a</span> (<a href="#" id="resetElapsed">reset</a>)</li>
+      <li>rows in table: <span id="curNumRows">0</span></li>
+      <li>items in list: <span id="curNumItems">0</span></li>
+    </ul>
+    table actions:
+    <ul>
+      <li><a href="#" data-action="clearRows">clear all rows</a></li>
+      <li><a href="#" data-action="appendRows">append N rows</a></li>
+      <li><a href="#" data-action="replaceRowsInnerHTML">replace with N rows (innerHTML)</a></li>
+      <li><a href="#" data-action="replaceRowsAppendChild">replace with N rows (appendChild)</a></li>
+      <li><a href="#" data-action="updateFirstRow">update first cell in first row</a></li>
+      <li><a href="#" data-action="updateLastRow">update first cell in last row</a></li>
+      <li><a href="#" data-action="updateEvery10thRow">update first cell in every 10th row</a></li>
+      <li><a href="#" data-action="updateAllRows">update first cell in every row</a></li>
+      <li><a href="#" data-action="insertRowAtTop">insert row at top</a></li>
+    </ul>
+    list actions:
+    <ul>
+      <li><a href="#" data-action="clearItems">clear all items</a></li>
+      <li><a href="#" data-action="appendItems">append N items</a></li>
+      <li><a href="#" data-action="replaceItemsInnerHTML">replace with N items (innerHTML)</a></li>
+      <li><a href="#" data-action="replaceItemsAppendChild">replace with N items (appendChild)</a></li>
+      <li><a href="#" data-action="updateFirstItem">update first item</a></li>
+      <li><a href="#" data-action="updateLastItem">update last item</a></li>
+      <li><a href="#" data-action="updateEvery10thItem">update every 10th item</a></li>
+      <li><a href="#" data-action="updateAllItems">update every item</a></li>
+      <li><a href="#" data-action="insertItemAtTop">insert item at top</a></li>
+    </ul>
+    <p>
+      table:
+      <table id="main-table">
+        <thead>
+          <th class="col0">col0</th>
+          <th class="col1">col1</th>
+          <th class="col2">col2</th>
+          <th class="col3">col3</th>
+          <th class="col4">col4</th>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </p>
+    <p>
+      list:
+      <ul id="main-list"></ul>
+    </p>
+    <script src="./main.js"></script>
+  </body>
+</html>

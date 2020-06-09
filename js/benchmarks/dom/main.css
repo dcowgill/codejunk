@@ -1,0 +1,26 @@
+* {
+    box-sizing: border-box;
+    font-family: Optima;
+    font-size: 16px;
+}
+
+input {
+    width: 300px;
+}
+
+table#main-table {
+    border: 1px solid black;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+table#main-table th, table#main-table td {
+    border: 1px solid #aaa;
+    padding: 2px 8px;
+}
+
+table#main-table th.col0, table#main-table td.col0 { width: 150px; }
+table#main-table th.col1, table#main-table th.col1 { width: 100px; }
+table#main-table th.col2, table#main-table th.col2 { width: 150px; }
+table#main-table th.col3, table#main-table th.col3 { width: 100px; }
+table#main-table th.col4, table#main-table th.col4 { width: 150px; }
