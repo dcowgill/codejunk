@@ -45,6 +45,14 @@ func verify(day, part int, answer int64) string {
 		{13, 1}: 695,
 		{14, 1}: 3095,
 		{14, 2}: 3152788426516,
+		{15, 1}: 562,
+		{15, 2}: 2874,
+		{16, 1}: 873,
+		{16, 2}: 402817863665,
+		{17, 1}: 4560,
+		{17, 2}: 3344,
+		{18, 1}: 4173,
+		{18, 2}: 4706,
 	}
 	if expected, ok := knownAnswers[[2]int{day, part}]; ok {
 		if answer != expected {
